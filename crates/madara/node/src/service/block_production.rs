@@ -1,4 +1,5 @@
 use crate::cli::block_production::BlockProductionParams;
+use crate::util::parse_hex_felt;
 use anyhow::Context;
 use mc_block_import::{BlockImporter, BlockValidationContext};
 use mc_block_production::{metrics::BlockProductionMetrics, BlockProductionTask};
@@ -7,7 +8,6 @@ use mc_devnet::{ChainGenesisDescription, DevnetKeys};
 use mc_mempool::{L1DataProvider, Mempool};
 use mp_utils::service::{MadaraServiceId, PowerOfTwo, Service, ServiceId, ServiceRunner};
 use std::{io::Write, sync::Arc};
-
 pub struct BlockProductionService {
     backend: Arc<MadaraBackend>,
     block_import: Arc<BlockImporter>,
@@ -15,6 +15,7 @@ pub struct BlockProductionService {
     metrics: Arc<BlockProductionMetrics>,
     l1_data_provider: Arc<dyn L1DataProvider>,
     n_devnet_contracts: u64,
+    devnet_seed: String,
 }
 
 impl BlockProductionService {
@@ -35,6 +36,7 @@ impl BlockProductionService {
             metrics,
             block_import,
             n_devnet_contracts: config.devnet_contracts,
+            devnet_seed: config.devnet_seed.clone(),
         })
     }
 }
@@ -74,7 +76,13 @@ impl BlockProductionService {
     /// called on node startup even if sequencer block production is not yet
     /// enabled. This happens during warp updates on a local sequencer.
     pub async fn setup_devnet(&self) -> anyhow::Result<()> {
-        let Self { backend, n_devnet_contracts, block_import, .. } = self;
+        let Self { 
+            backend, 
+            n_devnet_contracts, 
+            block_import, 
+            devnet_seed, 
+            .. 
+        } = self;
 
         let keys = if backend.get_latest_block_n().context("Getting the latest block number in db")?.is_none() {
             // deploy devnet genesis
@@ -82,8 +90,11 @@ impl BlockProductionService {
 
             let mut genesis_config =
                 ChainGenesisDescription::base_config().context("Failed to create base genesis config")?;
+
+            let seed = parse_hex_felt(devnet_seed).context("Invalid devnet seed")?;
+            
             let contracts =
-                genesis_config.add_devnet_contracts(*n_devnet_contracts).context("Failed to add devnet contracts")?;
+                genesis_config.add_devnet_contracts(*n_devnet_contracts, seed).context("Failed to add devnet contracts")?;
 
             let genesis_block =
                 genesis_config.build(backend.chain_config()).context("Building genesis block from devnet config")?;

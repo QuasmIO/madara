@@ -94,7 +94,7 @@ impl ChainGenesisDescription {
     }
 
     #[tracing::instrument(skip(self), fields(module = "ChainGenesisDescription"))]
-    pub fn add_devnet_contracts(&mut self, n_addr: u64) -> anyhow::Result<DevnetKeys> {
+    pub fn add_devnet_contracts(&mut self, n_addr: u64, seed: Felt) -> anyhow::Result<DevnetKeys> {
         let account_class =
             InitiallyDeclaredClass::new_sierra(ACCOUNT_CLASS_DEFINITION).context("Failed to add account class")?;
         let account_class_hash = account_class.class_hash();
@@ -104,10 +104,8 @@ impl ChainGenesisDescription {
             get_storage_var_address("Account_public_key", &[])
         }
 
-        // We may want to make this seed a cli argument in the future.
-        let seed = Felt::from_hex_unchecked("0x1278b36872363a1276387");
-
         fn rand_from_i(seed: Felt, i: u64) -> Felt {
+            // A simple example: Poseidon::hash(&seed, &(31 ^ !i).into())
             Poseidon::hash(&seed, &(31 ^ !i).into())
         }
 
@@ -123,8 +121,8 @@ impl ChainGenesisDescription {
                         calculate_contract_address(Felt::ZERO, account_class_hash, &[pubkey.scalar()], Felt::ZERO);
 
                     let balance = ContractFeeTokensBalance {
-                        fri: (10_000 * ETH_WEI_DECIMALS).into(),
-                        wei: (10_000 * STRK_FRI_DECIMALS).into(),
+                        fri: (10_000_000_000 * ETH_WEI_DECIMALS).into(),
+                        wei: (10_000_000_000 * STRK_FRI_DECIMALS).into(),
                     };
 
                     self.deployed_contracts.insert(calculated_address, account_class_hash);

@@ -41,6 +41,7 @@ mp-utils = { workspace = true }
 # Starknet
 blockifier.workspace = true
 starknet_api.workspace = true
+starknet-types-core.workspace = true
 
 # Other
 alloy.workspace = true

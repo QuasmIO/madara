@@ -1,4 +1,5 @@
 use anyhow::Context;
+use starknet_types_core::felt::Felt;
 
 pub fn setup_rayon_threadpool() -> anyhow::Result<()> {
     let available_parallelism = std::thread::available_parallelism()?;
@@ -44,4 +45,14 @@ pub async fn get_random_pokemon_name() -> anyhow::Result<String> {
     let random_pokemon = pokemon_array.choose(&mut rng).context("Choosing a name")?;
 
     Ok(random_pokemon["name"].as_str().context("Getting name from pokemon object")?.to_string())
+}
+
+
+pub fn parse_hex_felt(input: &str) -> anyhow::Result<Felt> {
+    let hex_str = input.trim_start_matches("0x");
+    if !hex_str.chars().all(|c| c.is_ascii_hexdigit()) {
+        anyhow::bail!("Seed string is not valid hex: {input}");
+    }
+    let felt = Felt::from_hex_unchecked(input);
+    Ok(felt)
 }

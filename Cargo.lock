@@ -5406,6 +5406,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "starknet-types-core 0.1.7 (git+https://github.com/kasarlabs/types-rs.git?branch=feat-deserialize-v0.1.7)",
  "starknet_api",
  "thiserror 2.0.3",
  "tokio",
