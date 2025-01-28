@@ -11,7 +11,7 @@ pub mod get_storage_proof;
 #[async_trait]
 impl StarknetReadRpcApiV0_8_0Server for Starknet {
     fn spec_version(&self) -> RpcResult<String> {
-        Ok(RpcVersion::RPC_VERSION_0_7_1.to_string())
+        Ok(RpcVersion::RPC_VERSION_0_8_0.to_string())
     }
 
     fn get_compiled_casm(&self, class_hash: Felt) -> RpcResult<serde_json::Value> {
